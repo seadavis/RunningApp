@@ -1,48 +1,72 @@
-import 'ol/ol.css';
-import Map from 'ol/Map';
-import {OSM, Vector as VectorSource} from 'ol/source';
-import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer';
-import {Point} from 'ol/geom';
-import View from 'ol/View';
+var map = L.map('map').setView([50.966819, -114.068019], 13);
 
-const source = new VectorSource({wrapX: false});
-const vectorLayer = new VectorLayer({
-  source: source
-});
+var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+  maxZoom: 18,
+  attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+    'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+  id: 'mapbox/streets-v11',
+  tileSize: 512,
+  zoomOffset: -1
+}).addTo(map);
 
-const map = new Map({
-  layers: [
-    new TileLayer({
-      source: new OSM(),
-    }),
-    vectorLayer
-  ],
-  target: 'map',
-  view: new View({
-    center: [-12697623.442109834, 6628955.677910388],
-    zoom: 12,
-  }),
-});
+/*var pointA = new L.LatLng(50.970643, -114.071388);
+var pointB = new L.LatLng(50.959292, -114.071388);
+var pointList = [pointA, pointB];
 
-map.on('click', function(event){
+var firstpolyline = new L.Polyline(pointList, {
+    color: 'red',
+    weight: 3,
+    opacity: 0.5,
+    smoothFactor: 1
+}); 
+firstpolyline.addTo(map);
 
-  const markerGeometry = new ol.geom.Point(ol.proj.transform(event.coordinate, 'EPSG:4326','EPSG:4326'));
-  const markerFeature = new ol.Feature({
-    geometry: markerGeometry
-} );
-  vectorLayer.source.features.add(markerFeature)
-  console.log("Click Coordinate: (" + event.coordinate[0] + ", " + event.coordinate[1] + ")")
 
-});
+var circle = L.circle([50.970643, -114.071388], {
+  color: 'red',
+  fillColor: '#f03',
+  fillOpacity: 0.5,
+  radius: 10
+}).bindTooltip("My Label", {permanent: true, className: "my-label", offset: [0, 0] }).addTo(map).bindPopup('I am a circle.'); */
 
-document.getElementById('zoom-out').onclick = function () {
-  const view = map.getView();
-  const zoom = view.getZoom();
-  view.setZoom(zoom - 1);
-};
+let circle1 = null;
+let point1 = null;
+let circle2 = null;
+let point2 = null;
 
-document.getElementById('zoom-in').onclick = function () {
-  const view = map.getView();
-  const zoom = view.getZoom();
-  view.setZoom(zoom + 1);
-};
+function onMapClick(e) {
+  
+  console.log("Circle 1: " + circle1);
+  console.log("Circle 2: " + circle2);
+
+  if(circle1 == null)
+  {
+    point1 = e.latlng
+    circle1 = L.circle(point1, {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 10
+    }).bindTooltip("My Label", {permanent: true, className: "my-label", offset: [0, 0] }).addTo(map);
+  }
+  else if(circle2 == null)
+  {
+    point2 = e.latlng;
+    circle2 =  L.circle(point2, {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 10
+    }).bindTooltip("My Label", {permanent: true, className: "my-label", offset: [0, 0] }).addTo(map);
+   
+    var polyLine = new L.Polyline([point1, point2], {
+      color: 'red',
+      weight: 3,
+      opacity: 0.5,
+      smoothFactor: 1
+    }); 
+    polyLine.addTo(map);
+  }
+} 
+
+map.on('click', onMapClick);
