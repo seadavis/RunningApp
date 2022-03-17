@@ -5,19 +5,21 @@
 <script>
 
 import L from 'leaflet'
+import Point from '../data/Point'
 import 'leaflet/dist/leaflet.css'
 
 export default {
 
   name: 'VueMap',
   props: {
-    route: Array
+    initialRoute: Array
   },
 
   data(){
     return {
       circles: [],
       lines: [],
+      route: this.initialRoute,
       map: null
     }
   },
@@ -25,29 +27,40 @@ export default {
   methods: {
     
     onMapClick(e){
-      console.log("Clicked:" + e.latlng);
-      this.drawPoints();
+      
+      this.route.push(new Point(e.latlng.lat, e.latlng.lng))
+      this.drawRoute(this.route.length - 1)
     },
 
     /* 
       Draws the complete
       set of points from the props.
       Draws a circle for one point and line segments for two or more points.
+
+      startIndex - the index at which we start drawing.
+        used for when we are adding a point to the route.
+        0 - based index.
+
+      Examples:
+        drawRoute(1) - starts drawing the route from the second
+        point in the route
+      
     */
-    drawRoute(){
+    drawRoute(startIndex = 0){
     
       if(this.map == null)
         return null;
 
-      for(let i = 0; i < this.route.length; i++){
+      for(let i = startIndex; i < this.route.length; i++){
         const p = this.convertToLeafletPoint(this.route[i]);
         const circle = this.createCircle(p);
         circle.addTo(this.map);
         this.circles.push(circle);
       }
 
-
-      for(let i = 1; i < this.route.length; i++){
+      const firstEndPoint = startIndex == 0 ? 1 : startIndex;
+      
+      for(let i = firstEndPoint; i < this.route.length; i++){
         const p1 = this.convertToLeafletPoint(this.route[i - 1]);
         const p2 = this.convertToLeafletPoint(this.route[i]);
         const polyLine = this.createPolyLine(p1, p2);

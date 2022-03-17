@@ -1,5 +1,5 @@
 <template>
-  <Map :route="points" />
+  <Map :initialRoute="points" />
 </template>
 
 <script>
