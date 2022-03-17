@@ -76,12 +76,23 @@ export default {
      * in the leaflet type.
      */
     createCircle(point){
-      return   L.circle(point, {
+      const c =   L.circle(point, {
                 color: 'red',
                 fillColor: '#f03',
                 fillOpacity: 0.5,
-                radius: 10
+                radius: 10,
+                isdraggable: true
               });
+     let m = this.map;
+     c.on({
+      mousedown: function () {
+        m.on('mousemove', function (e) {
+          c.setLatLng(e.latlng);
+        });
+      }  
+    }); 
+    
+      return c;
     },
 
     /**
