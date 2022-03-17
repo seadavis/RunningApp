@@ -13,4 +13,11 @@ export default class Point{
         this.lng = lng;
     }
 
+    /**
+     * Returns an array of the lat and lng in that order
+     */
+    get latlng(){
+        return [this.lat, this.lng]
+    }
+
 }

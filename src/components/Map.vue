@@ -17,6 +17,7 @@ export default {
   data(){
     return {
       circles: [],
+      lines: [],
       map: null
     }
   },
@@ -39,10 +40,17 @@ export default {
         return null;
 
       for(let i = 0; i < this.route.length; i++){
-        const p = this.route[i];
-        const circle = this.createCircle(L.latLng(p.lat, p.lng));
+        const circle = this.createCircle(L.latLng(this.route[i].latlng));
         circle.addTo(this.map);
         this.circles.push(circle);
+      }
+
+
+      for(let i = 1; i < this.route.length; i++){
+        const p1 = L.latLng(this.route[i - 1].latlng);
+        const p2 = L.latLng(this.route[i].latlng);
+        const polyLine = this.createPolyLine(p1, p2);
+        polyLine.addTo(this.map);
       }
 
     },
@@ -60,6 +68,21 @@ export default {
                 fillOpacity: 0.5,
                 radius: 10
               });
+    },
+
+    /**
+     * Creates a line between the 
+     * two points.
+     * Both points as arguments should be of a 
+     * leaflet type
+     */
+    createPolyLine(point1, point2){
+        return new L.Polyline([point1, point2], {
+            color: 'red',
+            weight: 3,
+            opacity: 0.5,
+            smoothFactor: 1
+      })
     }
   },
 
@@ -74,48 +97,6 @@ export default {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
     this.drawPoints();
-
-/*let circle1 = null;
-let point1 = null;
-let circle2 = null;
-let point2 = null;
-
-function onMapClick(e) {
-  
-  console.log("Circle 1: " + circle1);
-  console.log("Circle 2: " + circle2);
-
-  if(circle1 == null)
-  {
-    point1 = e.latlng
-    circle1 = L.circle(point1, {
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.5,
-      radius: 10
-    }).bindTooltip("My Label", {permanent: true, className: "my-label", offset: [0, 0] }).addTo(map);
-  }
-  else if(circle2 == null)
-  {
-    point2 = e.latlng;
-    circle2 =  L.circle(point2, {
-      color: 'red',
-      fillColor: '#f03',
-      fillOpacity: 0.5,
-      radius: 10
-    }).bindTooltip("My Label", {permanent: true, className: "my-label", offset: [0, 0] }).addTo(map);
-   
-    var polyLine = new L.Polyline([point1, point2], {
-      color: 'red',
-      weight: 3,
-      opacity: 0.5,
-      smoothFactor: 1
-    }); 
-    polyLine.addTo(map);
-  }
-} 
-
- */
 
   }
 
