@@ -1,5 +1,7 @@
 <template>
-  <Map :initialRoute="points" />
+  <div style="width:80vw;height:90vh;margin:auto;" >
+    <Map :initialRoute="points" />
+  </div>
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 <template>
-  <div id="map"  style="width: 600px; height: 400px;"></div>
+  <div id="map"  style="width: 100%; height: 100%;"></div>
 </template>
 
 <script>
@@ -59,7 +59,7 @@ export default {
       }
 
       const firstEndPoint = startIndex == 0 ? 1 : startIndex;
-      
+
       for(let i = firstEndPoint; i < this.route.length; i++){
         const p1 = this.convertToLeafletPoint(this.route[i - 1]);
         const p2 = this.convertToLeafletPoint(this.route[i]);
