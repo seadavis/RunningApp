@@ -34,21 +34,22 @@ export default {
       set of points from the props.
       Draws a circle for one point and line segments for two or more points.
     */
-    drawPoints(){
+    drawRoute(){
     
       if(this.map == null)
         return null;
 
       for(let i = 0; i < this.route.length; i++){
-        const circle = this.createCircle(L.latLng(this.route[i].latlng));
+        const p = this.convertToLeafletPoint(this.route[i]);
+        const circle = this.createCircle(p);
         circle.addTo(this.map);
         this.circles.push(circle);
       }
 
 
       for(let i = 1; i < this.route.length; i++){
-        const p1 = L.latLng(this.route[i - 1].latlng);
-        const p2 = L.latLng(this.route[i].latlng);
+        const p1 = this.convertToLeafletPoint(this.route[i - 1]);
+        const p2 = this.convertToLeafletPoint(this.route[i]);
         const polyLine = this.createPolyLine(p1, p2);
         polyLine.addTo(this.map);
       }
@@ -83,6 +84,14 @@ export default {
             opacity: 0.5,
             smoothFactor: 1
       })
+    },
+
+    /**
+     * Converts this point into a point
+     * as represented by leaflet
+     */
+    convertToLeafletPoint(p){
+      return L.latLng(p.lat, p.lng);
     }
   },
 
@@ -96,7 +105,7 @@ export default {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
-    this.drawPoints();
+    this.drawRoute();
 
   }
 
