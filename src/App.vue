@@ -1,12 +1,19 @@
 <template>
-  <Map />
+  <Map :route="points" />
 </template>
 
 <script>
 import Map from './components/Map.vue'
+import Point from "./data/Point"
 
 export default {
   name: 'App',
+  data(){
+    return {
+      points: [new Point(50.968211, -114.0687), new Point(50.965225, -114.068127)]
+    }
+  },
+
   components: {
     Map
   }
