@@ -20,6 +20,7 @@ export default {
       circles: [],
       lines: [],
       route: this.initialRoute,
+      selectedPoint: null,
       map: null
     }
   },
@@ -69,6 +70,41 @@ export default {
 
     },
 
+    mapMouseMoveEvent(e){
+        if(this.selectedPoint != null){
+          this.selectedPoint.setLatLng(e.latlng);
+        }
+    },
+
+    /**
+     * Selects the given circle
+     */
+    selectPoint(circle){
+
+      circle.remove();
+      const moveablePoint = L.circle(circle.getLatLng(), {
+                color: 'blue',
+                fillColor: '#3477eb',
+                fillOpacity: 0.5,
+                radius: 10,
+                isdraggable: true
+              });
+
+      moveablePoint.addTo(this.map);
+      this.selectedPoint = moveablePoint;
+
+      moveablePoint.on({
+        mousedown: function(){
+          
+          moveablePoint.remove();
+          circle.addTo(this.map);
+          circle.setLatLng(moveablePoint.getLatLng());
+          this.selectedPoint = null;
+
+        }.bind(this)
+      });
+    },
+
     /**
      * Creates an unselected
      * circle with the default colors.
@@ -83,14 +119,14 @@ export default {
                 radius: 10,
                 isdraggable: true
               });
-     let m = this.map;
-     c.on({
-      mousedown: function () {
-        m.on('mousemove', function (e) {
-          c.setLatLng(e.latlng);
-        });
-      }  
-    }); 
+    
+      
+      c.on({
+        mousedown: function(){
+            this.selectPoint(c);
+        }.bind(this)
+      })
+
     
       return c;
     },
@@ -125,6 +161,9 @@ export default {
   mounted(){
      this.map = L.map('map').setView([50.966819, -114.068019], 13);
      this.map.on('click', this.onMapClick);
+     this.map.on({
+       mousemove: this.mapMouseMoveEvent
+     })
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
