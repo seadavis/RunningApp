@@ -8,6 +8,69 @@ import L from 'leaflet'
 import Point from '../data/Point'
 import 'leaflet/dist/leaflet.css'
 
+/**
+ * TopologicalPoints hold 
+ * connectivity information
+ * about the route.
+ * 
+ * I.e. which lines they are connected to
+ */
+/* eslint-disable */
+class TopolgicalPoint{
+
+  /**
+   * point - the point in the points array this is added to
+   * circle - the circle theb point is connected to
+   * nextLine - the line at which this point is a start point,
+   *  may be null
+   * 
+   * previousLine - the line at which this point is an endpoint.
+   *  only null if there is one point
+   */
+  constructor(point, circle, nextLine, previousLine){
+    this.point = point;
+    this.circle = circle;
+    this.nextLine = nextLine;
+    this.previousLine = previousLine;
+  }
+
+}
+
+
+class TopologicalRoute{
+
+  constructor(topologicalPoints){
+
+  }
+
+  /**
+   * Adds a Point to
+   * the end of the route
+   * 
+   * Returns the circle created from the point
+   */
+  addPoint(point){
+
+  }
+
+  /**
+   * Given a circle selects the previous 
+   * line segment.
+   */
+  previousLineSegmnet(circle){
+
+  }
+
+  /*
+    Given a circle gets the next segment in the route
+  */
+  nextLineSegment(circle){
+
+  }
+
+}
+/* eslint-enable */
+
 export default {
 
   name: 'VueMap',
@@ -17,8 +80,6 @@ export default {
 
   data(){
     return {
-      circles: [],
-      lines: [],
       route: this.initialRoute,
       selectedPoint: null,
       map: null
@@ -28,7 +89,6 @@ export default {
   methods: {
     
     onMapClick(e){
-      
       this.route.push(new Point(e.latlng.lat, e.latlng.lng))
       this.drawRoute(this.route.length - 1)
     },
@@ -52,19 +112,39 @@ export default {
       if(this.map == null)
         return null;
 
+      let circles = [];
+      let lines = [];
+
       for(let i = startIndex; i < this.route.length; i++){
       
         const p = this.convertToLeafletPoint(this.route[i]);
         const circle = this.createCircle(p);
-        circle.addTo(this.map);
-        this.circles.push(circle);
+        circles.push(circle);
+        //circle.addTo(this.map);
 
         if(i > 0)
         {
             const p2 = this.convertToLeafletPoint(this.route[i - 1]);
             const polyLine = this.createPolyLine(p, p2);
-            polyLine.addTo(this.map);
+            lines.push(polyLine);
+            //polyLine.addTo(this.map);
         }
+      }
+
+      for(let i = startIndex; i < circles.length; i++)
+      {
+        circles[i].addTo(this.map);
+        const circle = circles[i];
+        circles[i].on({
+          mousedown: function(){
+              this.selectPoint(circle);
+          }.bind(this)
+        });
+      }
+
+      for(let i = startIndex; i < lines.length; i++)
+      {
+          lines[i].addTo(this.map)
       }
 
     },
@@ -93,6 +173,7 @@ export default {
       this.selectedPoint = moveablePoint;
 
       moveablePoint.on({
+
         mousedown: function(){
           
           moveablePoint.remove();
@@ -120,13 +201,6 @@ export default {
               });
     
       
-      c.on({
-        mousedown: function(){
-            this.selectPoint(c);
-        }.bind(this)
-      })
-
-    
       return c;
     },
 
@@ -152,10 +226,8 @@ export default {
     convertToLeafletPoint(p){
       return L.latLng(p.lat, p.lng);
     }
+
   },
-
-
- 
 
   mounted(){
      this.map = L.map('map').setView([50.966819, -114.068019], 13);
