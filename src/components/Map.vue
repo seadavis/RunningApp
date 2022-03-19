@@ -53,19 +53,18 @@ export default {
         return null;
 
       for(let i = startIndex; i < this.route.length; i++){
+      
         const p = this.convertToLeafletPoint(this.route[i]);
         const circle = this.createCircle(p);
         circle.addTo(this.map);
         this.circles.push(circle);
-      }
 
-      const firstEndPoint = startIndex == 0 ? 1 : startIndex;
-
-      for(let i = firstEndPoint; i < this.route.length; i++){
-        const p1 = this.convertToLeafletPoint(this.route[i - 1]);
-        const p2 = this.convertToLeafletPoint(this.route[i]);
-        const polyLine = this.createPolyLine(p1, p2);
-        polyLine.addTo(this.map);
+        if(i > 0)
+        {
+            const p2 = this.convertToLeafletPoint(this.route[i - 1]);
+            const polyLine = this.createPolyLine(p, p2);
+            polyLine.addTo(this.map);
+        }
       }
 
     },
