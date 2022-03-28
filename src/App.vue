@@ -1,6 +1,10 @@
 <template>
   <div style="width:80vw;height:90vh;margin:auto;" >
-    <Map :initialRoute="points" />
+    <Map @route-changed="updateSummary" :initialRoute="points" />
+    <div style="text-align:left;">
+       Distance: {{distance}}
+    </div>
+   
   </div>
 </template>
 
@@ -12,8 +16,17 @@ export default {
   name: 'App',
   data(){
     return {
-      points: [new Point(50.968211, -114.0687), new Point(50.965225, -114.068127)]
+      distance: 0,
+      points: [new Point(50.946991, -114.068137), new Point(50.964962, -114.068001)]
     }
+  },
+
+  methods:{
+
+    updateSummary(routeParams){
+      this.distance = routeParams.distance.km.toFixed(2);
+    }
+
   },
 
   components: {

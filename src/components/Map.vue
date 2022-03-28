@@ -5,6 +5,8 @@
 <script>
 
 import L from 'leaflet'
+import RouteParameters from '../data/RouteParameters'
+import Distance from '../data/Distance'
 import 'leaflet/dist/leaflet.css'
 
 /**
@@ -14,7 +16,6 @@ import 'leaflet/dist/leaflet.css'
  * 
  * I.e. which lines they are connected to
  */
-/* eslint-disable */
 class TopologicalPoint{
 
   /**
@@ -47,6 +48,17 @@ class TopologicalRoute{
 
   get length(){
     return this.points.length - 1;
+  }
+
+  get distance(){
+
+    let distance = 0;
+
+    for(let i = 1; i < this.points.length; i++){
+      distance = distance + this.pointWiseDistance(this.points[i - 1].point, this.points[i].point);
+    }
+
+    return distance;
   }
 
   /**
@@ -159,8 +171,45 @@ class TopologicalRoute{
     })
   }
 
+  /**
+   * The point wise distance between two 
+   * points on the route map.
+   * 
+   * p1, p2 are Leaflet points.
+   * Returns the distance in meters
+   */
+  pointWiseDistance(p1, p2){
+
+
+    /* 
+      Distance of the earth in Meters.
+     */
+    const r = 6371000
+
+    const phi_1 = this.degrees_to_radians(p1.lat);
+    const phi_2 = this.degrees_to_radians(p2.lat);
+
+    const lambda_1 = this.degrees_to_radians(p1.lng);
+    const lambda_2 = this.degrees_to_radians(p2.lng);
+
+    const sin_squared_phi = Math.pow(Math.sin((phi_2 - phi_1)/2.0), 2);
+    const sin_squared_lambda = Math.pow(Math.sin((lambda_2 - lambda_1)/2.0), 2);
+    const cos_phi_1 = Math.cos(phi_1);
+    const cos_phi_2 = Math.cos(phi_2);
+
+    const norm = Math.sqrt(sin_squared_phi + cos_phi_1*cos_phi_2*sin_squared_lambda);
+    const arcSin = Math.asin(norm);
+
+    return 2.0*r*arcSin;
+  }
+
+
+ degrees_to_radians(degrees){
+    var pi = Math.PI;
+    return degrees * (pi/180);
 }
-/* eslint-enable */
+
+}
 
 export default {
 
@@ -185,6 +234,7 @@ export default {
       {
         this.route.addPoint(e.latlng);
         this.drawRoute(this.route.length);
+        this.routeUpdated();
       }
     },
 
@@ -235,8 +285,6 @@ export default {
     moveSelectedPoint(){
 
       const selectedLatLng = this.selectedPoint.getLatLng();
-
-    
       const previousPoint = this.route.previousPoint(this.selectedPointInitialLocation);
       const previousLine = this.route.previousLineSegment(this.selectedPointInitialLocation);
       const nextLine = this.route.nextLineSegment(this.selectedPointInitialLocation);
@@ -261,8 +309,7 @@ export default {
       console.log(`Removing: ${this.selectedPoint}, Adding: ${circle} `)
       circle.setLatLng(selectedLatLng);
       circle.addTo(this.map);
-      
-      
+    
       const topologicalPoint = this.route.findPoint(this.selectedPointInitialLocation);
       if(topologicalPoint != null)
         topologicalPoint.point = this.selectedPoint.getLatLng();
@@ -270,6 +317,8 @@ export default {
 
       this.selectedPointInitialLocation = null;
       this.selectedPoint = null;
+
+      this.routeUpdated();
     },
 
     /**
@@ -305,6 +354,19 @@ export default {
      */
     convertToLeafletPoint(p){
       return L.latLng(p.lat, p.lng);
+    },
+    
+    /***
+     * Method for internal use
+     * by our Running App program.
+     * 
+     * Called whenever the route in question is
+     * updated.
+     */
+    routeUpdated(){
+        const distance = Distance.fromMeters(this.route.distance)
+        const params = new RouteParameters(distance);
+        this.$emit('routeChanged', params);
     }
 
   },
@@ -325,6 +387,7 @@ export default {
       let p = this.convertToLeafletPoint(this.initialRoute[i]);
       this.route.addPoint(p);
     }
+    this.routeUpdated();
     this.drawRoute();
 
   }
