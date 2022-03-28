@@ -230,8 +230,7 @@ export default {
   methods: {
     
     onMapClick(e){
-      if(!this.route.isContainedInPoint(e.latlng))
-      {
+      if(!this.route.isContainedInPoint(e.latlng)) {
         this.route.addPoint(e.latlng);
         this.drawRoute(this.route.length);
         this.routeUpdated();
