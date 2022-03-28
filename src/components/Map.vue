@@ -71,8 +71,7 @@ class TopologicalRoute{
     const c = this.createCircle(point);
 
     let previousLine = null;
-    if(this.points.length > 0)
-    {
+    if(this.points.length > 0){
       previousLine = this.createPolyLine(this.points[this.points.length - 1].point, point);
       this.points[this.points.length - 1].nextLine = previousLine;
     }

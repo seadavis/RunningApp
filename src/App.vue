@@ -2,7 +2,7 @@
   <div style="width:80vw;height:90vh;margin:auto;" >
     <Map @route-changed="updateSummary" :initialRoute="points" />
     <div style="text-align:left;">
-       Distance: {{distance}}
+       Distance: {{distance}} km
     </div>
    
   </div>
