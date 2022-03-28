@@ -221,8 +221,11 @@ export default {
   data(){
     return {
       route: new TopologicalRoute(),
+
+      /* the selected lat and lng point */
       selectedPoint: null,
-      selectedPointInitialLocation: null,
+      /* The Topological Point currently moving */
+      selectedTopoPoint: null,
       map: null
     }
   },
@@ -284,10 +287,10 @@ export default {
     moveSelectedPoint(){
 
       const selectedLatLng = this.selectedPoint.getLatLng();
-      const previousPoint = this.route.previousPoint(this.selectedPointInitialLocation);
-      const previousLine = this.route.previousLineSegment(this.selectedPointInitialLocation);
-      const nextLine = this.route.nextLineSegment(this.selectedPointInitialLocation);
-      const nextPoint = this.route.nextPoint(this.selectedPointInitialLocation);
+      const previousPoint = this.route.previousPoint(this.selectedTopoPoint.point);
+      const previousLine = this.route.previousLineSegment(this.selectedTopoPoint.point);
+      const nextLine = this.route.nextLineSegment(this.selectedTopoPoint.point);
+      const nextPoint = this.route.nextPoint(this.selectedTopoPoint.point);
 
       if(previousLine != null  && previousPoint != null){
         previousLine.setLatLngs([previousPoint.point, selectedLatLng])
@@ -298,6 +301,9 @@ export default {
         nextLine.setLatLngs([selectedLatLng, nextPoint.point]);
       }
 
+      this.selectedTopoPoint.point = selectedLatLng;
+
+      this.routeUpdated();
     },
 
     mouseDownSelectedPoint(circle){
@@ -309,12 +315,8 @@ export default {
       circle.setLatLng(selectedLatLng);
       circle.addTo(this.map);
     
-      const topologicalPoint = this.route.findPoint(this.selectedPointInitialLocation);
-      if(topologicalPoint != null)
-        topologicalPoint.point = this.selectedPoint.getLatLng();
-
-
-      this.selectedPointInitialLocation = null;
+    
+      this.selectedTopoPoint = null;
       this.selectedPoint = null;
 
       this.routeUpdated();
@@ -327,8 +329,8 @@ export default {
 
       console.log(`Selected Point: ${circle}`)
       circle.remove();
-      this.selectedPointInitialLocation = circle.getLatLng();
-      const moveablePoint = L.circle(this.selectedPointInitialLocation, {
+      this.selectedTopoPoint = this.route.findPoint(circle.getLatLng());
+      const moveablePoint = L.circle(this.selectedTopoPoint.point, {
                 color: 'blue',
                 fillColor: '#3477eb',
                 fillOpacity: 0.5,
