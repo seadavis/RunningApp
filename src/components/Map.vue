@@ -284,6 +284,7 @@ export default {
         if(newLine != null)
           newLine.addTo(this.map);
 
+        this.routeUpdated();
         this.selectedTopoPoint = null;
         this.selectedPoint = null;
       }
