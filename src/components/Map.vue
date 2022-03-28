@@ -101,16 +101,37 @@ class TopologicalRoute{
    * Returns the circle created from the point
    */
   addPoint(point){
-    const c = this.createCircle(point);
 
-    let previousLine = null;
-    if(this.points.length > 0){
-      previousLine = this.createPolyLine(this.points[this.points.length - 1].point, point);
-      this.points[this.points.length - 1].nextLine = previousLine;
+    const c = this.createCircle(point);
+    const previousIndex = this.findIndexOfPreviousSegment(point);
+
+    if(previousIndex >= 1){
+      const nextPoint = this.points[previousIndex];
+      nextPoint.previousLine.remove();
+      const previousPoint = this.points[previousIndex - 1];
+      const previousSegment = this.createPolyLine(previousPoint.point, point);
+      const nextSegment = this.createPolyLine(point, nextPoint.point);
+
+      previousPoint.nextLine = previousSegment;
+      nextPoint.previousLine = nextSegment;
+
+      const topologicalPoint = new TopologicalPoint(point, c, nextSegment, previousSegment);
+      this.points.splice(previousIndex, 0, topologicalPoint);
+      return {lines: [previousSegment, nextSegment], circles: [c]}
     }
-    
-    const topologicalP = new TopologicalPoint(point, c, null, previousLine);
-    this.points.push(topologicalP);
+
+    else{
+      let previousLine = null;
+      if(this.points.length > 0){
+        previousLine = this.createPolyLine(this.points[this.points.length - 1].point, point);
+        this.points[this.points.length - 1].nextLine = previousLine;
+      }
+      const topologicalP = new TopologicalPoint(point, c, null, previousLine);
+      this.points.push(topologicalP);
+      return {lines: [], circles: []}
+    }
+   
+  
   }
 
   /**
@@ -173,6 +194,21 @@ class TopologicalRoute{
 
   findPointIndex(latLng){
     return this.points.findIndex(p => p.point.equals(latLng));
+  }
+
+  /* 
+    finds the index of the point whose previousLine intersects the
+    given point.
+
+    latLng - just the straight latLng of the point
+  */
+  findIndexOfPreviousSegment(latLng){
+      return this.points.findIndex(p => {
+        if(p.previousLine == null)
+          return false;
+
+        return p.previousLine.getBounds().contains(latLng);
+      });
   }
 
   createCircle(point){
@@ -266,8 +302,18 @@ export default {
     
     onMapClick(e){
       if(!this.route.isContainedInPoint(e.latlng)) {
-        this.route.addPoint(e.latlng);
-        this.drawRoute(this.route.length);
+        const segments = this.route.addPoint(e.latlng);
+        for(let i = 0; i < segments.lines.length; i++){
+            segments.lines[i].addTo(this.map);
+        }
+        for(let j = 0; j < segments.circles.length; j++){
+          this.renderCircle(segments.circles[j]);
+        }
+
+        if(segments.lines.length == 0){
+          this.drawRoute(this.route.length);
+        }
+      
         this.routeUpdated();
       }
     },
@@ -313,19 +359,21 @@ export default {
 
       for(let i = startIndex; i < points.length; i++)
       {
-        const circle = points[i].circle;
-        circle.addTo(this.map);
-        circle.on({
-          mousedown: function(){
-              this.selectPoint(circle);
-          }.bind(this)
-        });
-
+        this.renderCircle(points[i].circle);
         if(points[i].previousLine != null){
           points[i].previousLine.addTo(this.map);
         }
       }
 
+    },
+
+    renderCircle(circle){
+      circle.addTo(this.map);
+      circle.on({
+        mousedown: function(){
+            this.selectPoint(circle);
+        }.bind(this)
+      });
     },
 
     mapMouseMoveEvent(e){
