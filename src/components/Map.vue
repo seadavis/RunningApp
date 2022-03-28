@@ -5,7 +5,6 @@
 <script>
 
 import L from 'leaflet'
-import Point from '../data/Point'
 import 'leaflet/dist/leaflet.css'
 
 /**
@@ -16,7 +15,7 @@ import 'leaflet/dist/leaflet.css'
  * I.e. which lines they are connected to
  */
 /* eslint-disable */
-class TopolgicalPoint{
+class TopologicalPoint{
 
   /**
    * point - the point in the points array this is added to
@@ -39,8 +38,15 @@ class TopolgicalPoint{
 
 class TopologicalRoute{
 
-  constructor(topologicalPoints){
+  /**
+   * Builds a Topological route given a set of points, that is on the route.
+   */
+  constructor(){
+      this.points = [];
+  }
 
+  get length(){
+    return this.points.length - 1;
   }
 
   /**
@@ -50,22 +56,107 @@ class TopologicalRoute{
    * Returns the circle created from the point
    */
   addPoint(point){
+    const c = this.createCircle(point);
 
+    let previousLine = null;
+    if(this.points.length > 0)
+    {
+      previousLine = this.createPolyLine(this.points[this.points.length - 1].point, point);
+      this.points[this.points.length - 1].nextLine = previousLine;
+    }
+    
+    const topologicalP = new TopologicalPoint(point, c, null, previousLine);
+    this.points.push(topologicalP);
   }
 
   /**
-   * Given a circle selects the previous 
+   * Returns true if the given
+   * latitude and longitude are withing the given
+   * points.
+   */
+  isContainedInPoint(latLng){
+    return this.points.find(p => {
+      const bounds = p.circle.getBounds();
+      return bounds.contains(latLng);
+    });
+  }
+
+  previousPoint(latLng){
+    const pointIndex = this.findPointIndex(latLng);
+    if(pointIndex >= 1)
+      return this.points[pointIndex - 1];
+    
+    return null;
+  }
+
+  nextPoint(latLng){
+    const pointIndex = this.findPointIndex(latLng);
+    if(pointIndex < this.points.length - 1)
+      return this.points[pointIndex + 1];
+    
+    return null;
+  }
+
+  /**
+   * Given a latLng of a circle selects the previous 
    * line segment.
    */
-  previousLineSegmnet(circle){
-
+  previousLineSegment(latLng){
+    const point = this.findPoint(latLng);
+    if(point == null)
+      return null;
+    
+    return point.previousLine;
   }
 
   /*
-    Given a circle gets the next segment in the route
+    Given a latLng gets the next segment in the route
   */
-  nextLineSegment(circle){
+  nextLineSegment(latLng){
+    const point = this.findPoint(latLng);
+    if(point == null)
+      return null;
+    
+    return point.nextLine;
+  }
 
+  findPoint(latLng){
+    const index = this.findPointIndex(latLng);
+    if(index >= 0)
+      return this.points[index];
+    return null;
+  }
+
+  findPointIndex(latLng){
+    return this.points.findIndex(p => p.point.equals(latLng));
+  }
+
+  createCircle(point){
+    const c =   L.circle(point, {
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.5,
+                radius: 10,
+                isdraggable: true
+              });
+    
+      
+      return c;
+  }
+
+  /**
+   * Creates a line between the 
+   * two points.
+   * Both points as arguments should be of a 
+   * leaflet type
+   */
+  createPolyLine(point1, point2){
+      return new L.Polyline([point1, point2], {
+          color: 'red',
+          weight: 3,
+          opacity: 0.5,
+          smoothFactor: 1
+    })
   }
 
 }
@@ -80,8 +171,9 @@ export default {
 
   data(){
     return {
-      route: this.initialRoute,
+      route: new TopologicalRoute(),
       selectedPoint: null,
+      selectedPointInitialLocation: null,
       map: null
     }
   },
@@ -89,8 +181,11 @@ export default {
   methods: {
     
     onMapClick(e){
-      this.route.push(new Point(e.latlng.lat, e.latlng.lng))
-      this.drawRoute(this.route.length - 1)
+      if(!this.route.isContainedInPoint(e.latlng))
+      {
+        this.route.addPoint(e.latlng);
+        this.drawRoute(this.route.length);
+      }
     },
 
     /* 
@@ -110,41 +205,23 @@ export default {
     drawRoute(startIndex = 0){
     
       if(this.map == null)
-        return null;
+        return;
 
-      let circles = [];
-      let lines = [];
+      let points = this.route.points;
 
-      for(let i = startIndex; i < this.route.length; i++){
-      
-        const p = this.convertToLeafletPoint(this.route[i]);
-        const circle = this.createCircle(p);
-        circles.push(circle);
-        //circle.addTo(this.map);
-
-        if(i > 0)
-        {
-            const p2 = this.convertToLeafletPoint(this.route[i - 1]);
-            const polyLine = this.createPolyLine(p, p2);
-            lines.push(polyLine);
-            //polyLine.addTo(this.map);
-        }
-      }
-
-      for(let i = startIndex; i < circles.length; i++)
+      for(let i = startIndex; i < points.length; i++)
       {
-        circles[i].addTo(this.map);
-        const circle = circles[i];
-        circles[i].on({
+        const circle = points[i].circle;
+        circle.addTo(this.map);
+        circle.on({
           mousedown: function(){
               this.selectPoint(circle);
           }.bind(this)
         });
-      }
 
-      for(let i = startIndex; i < lines.length; i++)
-      {
-          lines[i].addTo(this.map)
+        if(points[i].previousLine != null){
+          points[i].previousLine.addTo(this.map);
+        }
       }
 
     },
@@ -155,13 +232,55 @@ export default {
         }
     },
 
+    moveSelectedPoint(){
+
+      const selectedLatLng = this.selectedPoint.getLatLng();
+
+    
+      const previousPoint = this.route.previousPoint(this.selectedPointInitialLocation);
+      const previousLine = this.route.previousLineSegment(this.selectedPointInitialLocation);
+      const nextLine = this.route.nextLineSegment(this.selectedPointInitialLocation);
+      const nextPoint = this.route.nextPoint(this.selectedPointInitialLocation);
+
+      if(previousLine != null  && previousPoint != null){
+        previousLine.setLatLngs([previousPoint.point, selectedLatLng])
+      }
+
+      console.log(`Next Line: ${nextLine}, Previous Line: ${previousLine}`)
+      if(nextLine != null && nextPoint != null){
+        nextLine.setLatLngs([selectedLatLng, nextPoint.point]);
+      }
+
+    },
+
+    mouseDownSelectedPoint(circle){
+
+      const selectedLatLng = this.selectedPoint.getLatLng();
+      this.selectedPoint.remove();
+
+      console.log(`Removing: ${this.selectedPoint}, Adding: ${circle} `)
+      circle.setLatLng(selectedLatLng);
+      circle.addTo(this.map);
+      
+      
+      const topologicalPoint = this.route.findPoint(this.selectedPointInitialLocation);
+      if(topologicalPoint != null)
+        topologicalPoint.point = this.selectedPoint.getLatLng();
+
+
+      this.selectedPointInitialLocation = null;
+      this.selectedPoint = null;
+    },
+
     /**
      * Selects the given circle
      */
     selectPoint(circle){
 
+      console.log(`Selected Point: ${circle}`)
       circle.remove();
-      const moveablePoint = L.circle(circle.getLatLng(), {
+      this.selectedPointInitialLocation = circle.getLatLng();
+      const moveablePoint = L.circle(this.selectedPointInitialLocation, {
                 color: 'blue',
                 fillColor: '#3477eb',
                 fillOpacity: 0.5,
@@ -174,51 +293,12 @@ export default {
 
       moveablePoint.on({
 
-        mousedown: function(){
-          
-          moveablePoint.remove();
-          circle.addTo(this.map);
-          circle.setLatLng(moveablePoint.getLatLng());
-          this.selectedPoint = null;
-
-        }.bind(this)
+        move: this.moveSelectedPoint,
+        mousedown: () => this.mouseDownSelectedPoint(circle)
       });
     },
 
-    /**
-     * Creates an unselected
-     * circle with the default colors.
-     * point - is the point LatLng in leaflet at which the circle will exist. Needs to be 
-     * in the leaflet type.
-     */
-    createCircle(point){
-      const c =   L.circle(point, {
-                color: 'red',
-                fillColor: '#f03',
-                fillOpacity: 0.5,
-                radius: 10,
-                isdraggable: true
-              });
-    
-      
-      return c;
-    },
-
-    /**
-     * Creates a line between the 
-     * two points.
-     * Both points as arguments should be of a 
-     * leaflet type
-     */
-    createPolyLine(point1, point2){
-        return new L.Polyline([point1, point2], {
-            color: 'red',
-            weight: 3,
-            opacity: 0.5,
-            smoothFactor: 1
-      })
-    },
-
+  
     /**
      * Converts this point into a point
      * as represented by leaflet
@@ -230,6 +310,7 @@ export default {
   },
 
   mounted(){
+
      this.map = L.map('map').setView([50.966819, -114.068019], 13);
      this.map.on('click', this.onMapClick);
      this.map.on({
@@ -239,6 +320,11 @@ export default {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
+
+    for(let i = 0; i < this.initialRoute.length; i++){
+      let p = this.convertToLeafletPoint(this.initialRoute[i]);
+      this.route.addPoint(p);
+    }
     this.drawRoute();
 
   }
