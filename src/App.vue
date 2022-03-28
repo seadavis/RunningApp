@@ -17,7 +17,7 @@ export default {
   data(){
     return {
       distance: 0,
-      points: [new Point(50.946991, -114.068137), new Point(50.964962, -114.068001)]
+      points: [new Point(50.964962, -114.068001), new Point(50.946991, -114.068137)]
     }
   },
 

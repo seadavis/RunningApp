@@ -1,5 +1,5 @@
 <template>
-  <div id="map"  style="width: 100%; height: 100%;"></div>
+  <div id="map"  style="width: 100%; height: 100%;" @keyup.delete="deleteKeyPressed"></div>
 </template>
 
 <script>
@@ -59,6 +59,39 @@ class TopologicalRoute{
     }
 
     return distance;
+  }
+
+  deletePoint(point){
+
+    const index = this.findPointIndex(point)
+    this.points[index].circle.remove();
+    this.points[index].circle.off();
+
+    let nextPoint = null
+    let previousPoint = null;
+    let lineSegment = null
+
+    if(index < this.points.length - 1){
+      
+      nextPoint = this.points[index + 1];
+      nextPoint.previousLine.remove();
+      nextPoint.previousLine = null;
+    }
+
+    if(index > 0){
+      previousPoint = this.points[index - 1];
+      previousPoint.nextLine.remove();
+      previousPoint.nextLine = null;
+    }
+
+    if(nextPoint != null && previousPoint != null){
+      lineSegment = this.createPolyLine(previousPoint.point, nextPoint.point);
+      previousPoint.nextLine = lineSegment;
+      nextPoint.previousLine = lineSegment;
+    }
+    
+    this.points.splice(index, 1);
+    return lineSegment;
   }
 
   /**
@@ -203,10 +236,10 @@ class TopologicalRoute{
   }
 
 
- degrees_to_radians(degrees){
+  degrees_to_radians(degrees){
     var pi = Math.PI;
     return degrees * (pi/180);
-}
+  }
 
 }
 
@@ -236,6 +269,23 @@ export default {
         this.route.addPoint(e.latlng);
         this.drawRoute(this.route.length);
         this.routeUpdated();
+      }
+    },
+
+    deleteKeyPressed(){
+      console.log(`Selected TopoPoint: ${this.selectedTopoPoint} `)
+      if(this.selectedTopoPoint != null){
+        console.log("Point Removed!");
+        this.selectedPoint.remove();
+        this.selectedPoint.off();
+      
+        const newLine = this.route.deletePoint(this.selectedTopoPoint.point);
+
+        if(newLine != null)
+          newLine.addTo(this.map);
+
+        this.selectedTopoPoint = null;
+        this.selectedPoint = null;
       }
     },
 
@@ -367,9 +417,11 @@ export default {
         const distance = Distance.fromMeters(this.route.distance)
         const params = new RouteParameters(distance);
         this.$emit('routeChanged', params);
-    }
+    },
 
   },
+
+ 
 
   mounted(){
 
@@ -387,6 +439,13 @@ export default {
       let p = this.convertToLeafletPoint(this.initialRoute[i]);
       this.route.addPoint(p);
     }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key == 'Delete') {
+        this.deleteKeyPressed();
+      }
+    });
+
     this.routeUpdated();
     this.drawRoute();
 
