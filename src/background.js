@@ -5,6 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path')
+const fs = require('fs');
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -42,10 +43,17 @@ async function createWindow() {
 async function handleFileOpen() {
   const { canceled, filePaths } = await dialog.showOpenDialog()
   if (canceled) {
-    return
+    return null;
   } else {
     return filePaths[0]
   }
+}
+
+function handleWriteToFile(event, path, content){
+  console.log(`Saving ${content} to ${path}`);
+  fs.writeFile(path, content,  function (err) {
+    if (err) return console.log(err);
+  });
 }
 
 
@@ -79,6 +87,7 @@ app.on('ready', async () => {
     }
   }
   ipcMain.handle('dialog:openFile', handleFileOpen)
+  ipcMain.handle('writeToFile', handleWriteToFile)
   createWindow()
 })
 

@@ -24,6 +24,7 @@ export default {
   data(){
     return {
       distance: 0,
+      selectedFilePath: null,
       points: [new Point(50.964962, -114.068001), new Point(50.946991, -114.068137)]
     }
   },
@@ -32,6 +33,22 @@ export default {
 
     updateSummary(routeParams){
       this.distance = routeParams.distance.km.toFixed(2);
+    },
+
+    async saveButtonClicked(){
+     await window.electronAPI.writeToFile(this.selectedFilePath, "Hello New File!");
+    },
+
+    async loadButtonClicked(){
+      
+      const result = await window.electronAPI.openFile();
+
+      if(result != null)
+      {
+        this.selectedFilePath = result;
+        console.log("Save! " + result);
+      }
+     
     }
 
   },
