@@ -2,7 +2,14 @@
   <div style="width:80vw;height:90vh;margin:auto;" >
     <Map @route-changed="updateSummary" :initialRoute="points" />
     <div style="text-align:left;">
+      Name of File: SomeFile
+    </div>
+    <div style="text-align:left;">
        Distance: {{distance}} km
+    </div>
+    <div style="text-align:left;">
+      <button @click="saveButtonClicked" style="margin-right:5%">Save</button>
+      <button @click="loadButtonClicked">Load</button>
     </div>
    
   </div>
