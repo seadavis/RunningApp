@@ -6,6 +6,7 @@ import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path')
 const fs = require('fs').promises;
+let win = null;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -14,7 +15,7 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+ win = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -68,6 +69,11 @@ async function handleFileOpen() {
   
 }
 
+async function handleShowMessage(event, msg){
+  console.log(`Opening Window with Message: ${msg}`);
+  await dialog.showMessageBox(win, {message: msg, title: "Running App"});
+}
+
 function handleWriteToFile(event, path, content){
   console.log(`Saving ${content} to ${path}`);
   fs.writeFile(path, content,  function (err) {
@@ -107,6 +113,7 @@ app.on('ready', async () => {
   }
   ipcMain.handle('dialog:openFile', handleFileOpen)
   ipcMain.handle('writeToFile', handleWriteToFile)
+  ipcMain.handle('dialog:showMessage', handleShowMessage)
   createWindow()
 })
 

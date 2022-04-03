@@ -2,7 +2,7 @@
   <div style="width:80vw;height:90vh;margin:auto;" >
     <Map @route-changed="updateSummary" :initialRoute="points" />
     <div style="text-align:left;">
-      Name of File: SomeFile
+      Route File: {{selectedFilePath}}
     </div>
     <div style="text-align:left;">
        Distance: {{distance}} km
@@ -37,6 +37,7 @@ export default {
 
     async saveButtonClicked(){
      await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
+     await window.electronAPI.showMessage(`Successfully Saved To: ${this.selectedFilePath}`);
     },
 
     async loadButtonClicked(){
