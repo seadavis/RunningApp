@@ -5,6 +5,8 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path')
+const fs = require('fs').promises;
+let win = null;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -13,9 +15,10 @@ protocol.registerSchemesAsPrivileged([
 
 async function createWindow() {
   // Create the browser window.
-  const win = new BrowserWindow({
+ win = new BrowserWindow({
     width: 800,
     height: 600,
+    title: 'RunRoutes',
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -40,11 +43,59 @@ async function createWindow() {
 }
 
 async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog()
-  if (canceled) {
-    return
-  } else {
-    return filePaths[0]
+
+  try{
+    console.log("File Open Clicked")
+    const { canceled, filePaths } = await dialog.showOpenDialog()
+    const filePath =  filePaths[0];
+    const fileData = await fs.readFile(filePaths[0])
+    console.log(`Read FileData: ${fileData}`)
+    if (canceled) {
+      return null;
+    }
+  
+    if(fileData == null){
+      return null;
+    }
+  
+    return {
+      filePath: filePaths[0],
+      points: JSON.parse(fileData)
+    }
+  }
+  catch{
+    return null;
+  }
+}
+
+async function handleShowMessage(event, msg){
+  console.log(`Opening Window with Message: ${msg}`);
+  await dialog.showMessageBox(win, {message: msg, title: "Running App"});
+}
+
+
+async function handleWriteToFile(event, path, content){
+  try{
+    const result = (await dialog.showSaveDialog(win, {defaultPath: path})); 
+
+    if(result.canceled || result.filePath == null){
+      return null;
+    }
+    const filePath = result.filePath;
+    await fs.writeFile(filePath, content);
+    return filePath;
+  }
+  catch(exception){
+
+    let msg = null
+    if(exception.code == 'EPERM'){
+      msg =  `Could not write to ${exception.path} due to permissions`
+    }
+    else{
+      msg = `Could not write to ${exception.path}`
+    }
+    await dialog.showMessageBox(win, {message: msg, title: "Running App Error!"});
+    return null;
   }
 }
 
@@ -79,6 +130,8 @@ app.on('ready', async () => {
     }
   }
   ipcMain.handle('dialog:openFile', handleFileOpen)
+  ipcMain.handle('writeToFile', handleWriteToFile)
+  ipcMain.handle('dialog:showMessage', handleShowMessage)
   createWindow()
 })
 
