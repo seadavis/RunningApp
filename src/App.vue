@@ -17,7 +17,6 @@
 
 <script>
 import Map from './components/Map.vue'
-import Point from "./data/Point"
 
 export default {
   name: 'App',
@@ -25,7 +24,7 @@ export default {
     return {
       distance: 0,
       selectedFilePath: null,
-      points: [new Point(50.964962, -114.068001), new Point(50.946991, -114.068137)]
+      points: []
     }
   },
 
@@ -33,10 +32,11 @@ export default {
 
     updateSummary(routeParams){
       this.distance = routeParams.distance.km.toFixed(2);
+      this.points = routeParams.points;
     },
 
     async saveButtonClicked(){
-     await window.electronAPI.writeToFile(this.selectedFilePath, "Hello New File!");
+     await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
     },
 
     async loadButtonClicked(){

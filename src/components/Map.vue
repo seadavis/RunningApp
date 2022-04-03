@@ -46,10 +46,25 @@ class TopologicalRoute{
       this.points = [];
   }
 
+  /**
+   * Gets the length of the route defined as
+   * the number of points.
+   */
   get length(){
     return this.points.length - 1;
   }
 
+  /* 
+    Gets the complete set of points expressed as 
+    a struct that looks like "lat", "lng"
+  */
+  get latlngpoints(){
+    return this.points.map(p => p.point);
+  }
+
+  /*
+    Gets the total distance of the route. 
+  */
   get distance(){
 
     let distance = 0;
@@ -464,7 +479,7 @@ export default {
      */
     routeUpdated(){
         const distance = Distance.fromMeters(this.route.distance)
-        const params = new RouteParameters(distance);
+        const params = new RouteParameters(distance, this.route.latlngpoints);
         this.$emit('routeChanged', params);
     },
 

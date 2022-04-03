@@ -7,8 +7,9 @@
  */
 export default class RouteParamters{
 
-    constructor(distance){
+    constructor(distance, points){
         this.distance = distance;
+        this.points = points;
     }
 
 }
