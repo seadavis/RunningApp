@@ -74,11 +74,24 @@ async function handleShowMessage(event, msg){
   await dialog.showMessageBox(win, {message: msg, title: "Running App"});
 }
 
-function handleWriteToFile(event, path, content){
-  console.log(`Saving ${content} to ${path}`);
-  fs.writeFile(path, content,  function (err) {
-    if (err) return console.log(err);
-  });
+
+async function handleWriteToFile(event, path, content){
+  try{
+    await fs.writeFile(path, content);
+    return true;
+  }
+  catch(exception){
+
+    let msg = null
+    if(exception.code == 'EPERM'){
+      msg =  `Could not write to ${exception.path} due to permissions`
+    }
+    else{
+      msg = `Could not write to ${exception.path}`
+    }
+    await dialog.showMessageBox(win, {message: msg, title: "Running App Error!"});
+    return false;
+  }
 }
 
 

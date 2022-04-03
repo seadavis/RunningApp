@@ -36,8 +36,14 @@ export default {
     },
 
     async saveButtonClicked(){
-     await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
-     await window.electronAPI.showMessage(`Successfully Saved To: ${this.selectedFilePath}`);
+    
+      const success = await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
+
+      if(success){
+         await window.electronAPI.showMessage(`Successfully Saved To: ${this.selectedFilePath}`);
+      }
+     
+     
     },
 
     async loadButtonClicked(){
