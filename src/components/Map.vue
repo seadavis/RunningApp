@@ -231,7 +231,7 @@ class TopologicalRoute{
                 color: 'red',
                 fillColor: '#f03',
                 fillOpacity: 0.5,
-                radius: 10,
+                radius: 3,
                 isdraggable: true
               });
     
@@ -447,7 +447,7 @@ export default {
                 color: 'blue',
                 fillColor: '#3477eb',
                 fillOpacity: 0.5,
-                radius: 10,
+                radius: 3,
                 isdraggable: true
               });
 

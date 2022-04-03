@@ -18,6 +18,7 @@ async function createWindow() {
  win = new BrowserWindow({
     width: 800,
     height: 600,
+    title: 'RunRoutes',
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -43,7 +44,7 @@ async function createWindow() {
 
 async function handleFileOpen() {
 
-  //try{
+  try{
     console.log("File Open Clicked")
     const { canceled, filePaths } = await dialog.showOpenDialog()
     const filePath =  filePaths[0];
@@ -61,12 +62,10 @@ async function handleFileOpen() {
       filePath: filePaths[0],
       points: JSON.parse(fileData)
     }
-  //}
-  //catch{
-    //return null;
-  //}
- 
-  
+  }
+  catch{
+    return null;
+  }
 }
 
 async function handleShowMessage(event, msg){
@@ -77,8 +76,14 @@ async function handleShowMessage(event, msg){
 
 async function handleWriteToFile(event, path, content){
   try{
-    await fs.writeFile(path, content);
-    return true;
+    const result = (await dialog.showSaveDialog(win, {defaultPath: path})); 
+
+    if(result.canceled || result.filePath == null){
+      return null;
+    }
+    const filePath = result.filePath;
+    await fs.writeFile(filePath, content);
+    return filePath;
   }
   catch(exception){
 
@@ -90,7 +95,7 @@ async function handleWriteToFile(event, path, content){
       msg = `Could not write to ${exception.path}`
     }
     await dialog.showMessageBox(win, {message: msg, title: "Running App Error!"});
-    return false;
+    return null;
   }
 }
 

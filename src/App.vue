@@ -37,17 +37,10 @@ export default {
 
     async saveButtonClicked(){
 
-      if(this.selectedFilePath == null){
-        const result = await window.electronAPI.openFile();
-        if(result == null)
-          return;
-          
-        this.selectedFilePath = result.filePath;
-      }
-    
-      const success = await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
-
-      if(success){
+      let filePath = typeof this.selectedFilePath == 'undefined' || this.selectedFilePath == null ? "C:\\" : this.selectedFilePath
+      filePath = await window.electronAPI.writeToFile(filePath, JSON.stringify(this.points));
+      this.selectedFilePath = filePath;
+      if(filePath != null){
          await window.electronAPI.showMessage(`Successfully Saved To: ${this.selectedFilePath}`);
       }
      
