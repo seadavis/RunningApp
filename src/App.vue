@@ -42,11 +42,12 @@ export default {
     async loadButtonClicked(){
       
       const result = await window.electronAPI.openFile();
-
+      
       if(result != null)
       {
-        this.selectedFilePath = result;
-        console.log("Save! " + result);
+        this.selectedFilePath = result.filePath;
+        this.points = result.points;
+        console.log(`Loaded: JSON.stringify(${JSON.stringify(result.points)}) from result.filePath`);
       }
      
     }

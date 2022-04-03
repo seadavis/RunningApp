@@ -483,8 +483,23 @@ export default {
         this.$emit('routeChanged', params);
     },
 
+    reloadRoute(route){
+      for(let i = 0; i < route.length; i++){
+        let p = this.convertToLeafletPoint(route[i]);
+        this.route.addPoint(p);
+      }
+      this.drawRoute();
+    }
+
   },
 
+  watch: {
+    
+    initialRoute(newRoute){
+      this.reloadRoute(newRoute);
+    }
+
+  },
  
 
   mounted(){
@@ -499,11 +514,7 @@ export default {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
 
-    for(let i = 0; i < this.initialRoute.length; i++){
-      let p = this.convertToLeafletPoint(this.initialRoute[i]);
-      this.route.addPoint(p);
-    }
-
+  
     window.addEventListener('keydown', (e) => {
       if (e.key == 'Delete') {
         this.deleteKeyPressed();
@@ -511,7 +522,6 @@ export default {
     });
 
     this.routeUpdated();
-    this.drawRoute();
 
   }
 
