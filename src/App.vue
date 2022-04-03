@@ -1,6 +1,6 @@
 <template>
   <div style="width:80vw;height:90vh;margin:auto;" >
-    <Map @route-changed="updateSummary" :initialRoute="points" />
+    <Map ref="map" @route-changed="updateSummary" :initialRoute="points" />
     <div style="text-align:left;">
       Route File: {{selectedFilePath}}
     </div>
@@ -36,6 +36,14 @@ export default {
     },
 
     async saveButtonClicked(){
+
+      if(this.selectedFilePath == null){
+        const result = await window.electronAPI.openFile();
+        if(result == null)
+          return;
+          
+        this.selectedFilePath = result.filePath;
+      }
     
       const success = await window.electronAPI.writeToFile(this.selectedFilePath, JSON.stringify(this.points));
 
@@ -54,6 +62,7 @@ export default {
       {
         this.selectedFilePath = result.filePath;
         this.points = result.points;
+        this.$refs.map.reloadRoute(this.points);
         console.log(`Loaded: JSON.stringify(${JSON.stringify(result.points)}) from result.filePath`);
       }
      

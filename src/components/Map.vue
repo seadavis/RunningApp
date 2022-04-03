@@ -492,14 +492,6 @@ export default {
     }
   },
 
-  watch: {
-    
-    initialRoute(newRoute){
-      this.reloadRoute(newRoute);
-    }
-
-  },
- 
 
   mounted(){
 
