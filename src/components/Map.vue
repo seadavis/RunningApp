@@ -490,7 +490,6 @@ export default {
       }
       this.drawRoute();
     }
-
   },
 
   watch: {
@@ -504,7 +503,7 @@ export default {
 
   mounted(){
 
-     this.map = L.map('map').setView([50.966819, -114.068019], 13);
+     this.map = L.map('map').setView([50.966819, -114.068019], 25);
      this.map.on('click', this.onMapClick);
      this.map.on({
        mousemove: this.mapMouseMoveEvent
