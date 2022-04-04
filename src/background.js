@@ -18,7 +18,7 @@ async function createWindow() {
  win = new BrowserWindow({
     width: 800,
     height: 600,
-    icon: './assets/running_man.png',
+    icon: path.join(__dirname, '/assets/running_man.png'),
     title: 'RunRoutes',
     webPreferences: {
       
